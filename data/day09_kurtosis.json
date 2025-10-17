@@ -1,0 +1,10 @@
+{
+  "title": "Distributions & Kurtosis by Regime",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Describe how fat tails (high kurtosis) can affect backtests and signal confidence.",
+      "answer_text": "Fat tails mean more extreme moves than a normal model predicts, which can break naive assumptions."
+    }
+  ]
+}
