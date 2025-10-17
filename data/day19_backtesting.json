@@ -2,9 +2,28 @@
   "title": "Backtest Discipline & Overfitting",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Which habit best limits overfitting?",
+      "options": [
+        "Keep an out-of-sample set and limit parameter tinkering",
+        "Optimize on the full history repeatedly",
+        "Pick the best-performing period only",
+        "Ignore data quality"
+      ],
+      "answer": 0,
+      "explanation": "True out-of-sample validation and restraint reduce curve fitting."
+    },
+    {
+      "type": "numeric",
+      "question": "If you try 20 different thresholds and choose the best in-sample, a fairer estimate of lift is often reduced by ~X% to account for multiple testing. Enter X= ? (rule-of-thumb)",
+      "answer": 20.0,
+      "tolerance": 5.0,
+      "explanation": "A rough haircut (≈10–30%) acknowledges selection bias. Exact value depends on experiment design."
+    },
+    {
       "type": "repeat",
-      "question": "Name one habit that reduces overfitting risk in your workflow.",
-      "answer_text": "Keep an untouched out-of-sample set and limit hyper-tuning cycles."
+      "question": "Name one logging note you’ll keep during model changes.",
+      "answer_text": "Record parameter changes, rationale, and whether performance was measured on out-of-sample data."
     }
   ]
 }
