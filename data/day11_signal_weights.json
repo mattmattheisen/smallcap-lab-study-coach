@@ -1,0 +1,10 @@
+{
+  "title": "Signal Aggregation & Weights",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "How would you explain combining weak, independent edges into a stronger combined score?",
+      "answer_text": "Independent small edges can add up; weighting prevents any single noisy signal from dominating."
+    }
+  ]
+}
