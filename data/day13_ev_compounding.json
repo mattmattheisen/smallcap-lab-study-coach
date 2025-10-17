@@ -2,9 +2,28 @@
   "title": "Expected Value & Compounding Efficiency",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Why does EV alone not guarantee good compounding?",
+      "options": [
+        "Because variance/volatility drag and tail risk reduce geometric growth",
+        "Because EV is always negative",
+        "Because prices are random",
+        "Because spreads are zero"
+      ],
+      "answer": 0,
+      "explanation": "Compounding depends on geometric mean; high variance can lower CAGR even with positive EV."
+    },
+    {
+      "type": "numeric",
+      "question": "A trade wins +10% with p=0.55 and loses −5% with q=0.45. Compute EV of one trade (decimal).",
+      "answer": 0.0275,
+      "tolerance": 0.001,
+      "explanation": "EV = 0.55*0.10 − 0.45*0.05 = 0.055 − 0.0225 = 0.0325 (If using net profit basis). If using simple expectation of return, 3.25%. (Accept 0.0325±0.002)"
+    },
+    {
       "type": "repeat",
-      "question": "Explain EV in one sentence as it relates to trade sizing.",
-      "answer_text": "EV is the probability-weighted average outcome; position size should grow when EV is positive and robust."
+      "question": "State one way to improve compounding efficiency without changing EV.",
+      "answer_text": "Reduce variance (fractional Kelly, diversify, avoid high-vol regimes)."
     }
   ]
 }
