@@ -1,0 +1,10 @@
+{
+  "title": "Multi-Ticker Sizing & Portfolio Context",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "How does correlation between tickers affect aggregate risk?",
+      "answer_text": "Highly correlated positions act like one larger bet; total size should be reduced."
+    }
+  ]
+}
