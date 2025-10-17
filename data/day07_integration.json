@@ -1,0 +1,22 @@
+{
+  "title": "Integration: Filters → Regime → Kelly",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "Why is Kelly applied last in your workflow?",
+      "options": [
+        "Because size depends on edge estimated from signals",
+        "Because Kelly determines which stocks to screen",
+        "Because Kelly sets pattern counts",
+        "Because Kelly controls market cap filters"
+      ],
+      "answer": 0,
+      "explanation": "Sizing is a function of the edge produced by the upstream model."
+    },
+    {
+      "type": "repeat",
+      "question": "Summarize the pipeline in one sentence.",
+      "answer_text": "Screen for quality → infer regime & confidence → aggregate signals → size with (fractional) Kelly."
+    }
+  ]
+}
