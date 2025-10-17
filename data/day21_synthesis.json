@@ -1,0 +1,10 @@
+{
+  "title": "Final Synthesis & Mastery Check",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Summarize the entire Small-Cap Lab process in 1–2 sentences.",
+      "answer_text": "We screen for quality small caps, infer market regimes probabilistically, aggregate signals into edge, then size positions with fractional Kelly to balance growth and risk."
+    }
+  ]
+}
