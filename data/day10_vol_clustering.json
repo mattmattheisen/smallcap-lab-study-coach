@@ -2,9 +2,28 @@
   "title": "Volatility Clustering & Short Bull Runs",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Why might the HMM segment bull phases into shorter runs compared to bears?",
+      "options": [
+        "Upside bursts increase variance/kurtosis, prompting the model to carve separate high-vol states",
+        "Bull markets always have lower returns",
+        "The model is biased toward bears",
+        "Because volume is ignored"
+      ],
+      "answer": 0,
+      "explanation": "Sudden positive jumps can produce distinct state statistics, splitting bulls into shorter regimes."
+    },
+    {
+      "type": "numeric",
+      "question": "If P(Bull→Bull)=0.79, what is the expected length (in days) of a bull run? Use E[length]=1/(1−p).",
+      "answer": 4.7619,
+      "tolerance": 0.1,
+      "explanation": "E[length] ≈ 1/(1−0.79) ≈ 4.76 days (memoryless approximation)."
+    },
+    {
       "type": "repeat",
-      "question": "Why can bull regimes appear shorter yet more volatile than bears in HMM output?",
-      "answer_text": "Because large, bursty upside moves create variance that the model segments into shorter states."
+      "question": "State one practical implication of volatility clustering for position sizing.",
+      "answer_text": "Increase caution/size reduction when entering during high-vol clusters; consider fractional Kelly."
     }
   ]
 }
