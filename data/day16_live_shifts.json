@@ -1,0 +1,10 @@
+{
+  "title": "Interpreting Live Regime Shifts",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "How should sizing respond when the model flags a transition state?",
+      "answer_text": "Reduce or pause sizing until confidence clears the threshold or regime stabilizes."
+    }
+  ]
+}
