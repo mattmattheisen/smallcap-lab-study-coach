@@ -1,0 +1,29 @@
+{
+  "title": "Kelly Position Sizing",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "Why use half-Kelly in live trading?",
+      "options": [
+        "To maximize growth volatility",
+        "To reduce drawdowns and estimation error impact",
+        "Because Kelly only works on coin flips",
+        "To ignore risk/reward ratios"
+      ],
+      "answer": 1,
+      "explanation": "Half-Kelly trades off some growth for much lower volatility and model risk."
+    },
+    {
+      "type": "numeric",
+      "question": "WinProb=0.55, Win/Loss=1.5:1. Kelly fraction f* = (b p − q)/b. Compute f*.",
+      "answer": 0.25,
+      "tolerance": 0.02,
+      "explanation": "f*=(1.5*0.55 − 0.45)/1.5 = 0.25 → Half-Kelly ≈ 0.125."
+    },
+    {
+      "type": "repeat",
+      "question": "Why can negative net edge produce 0% Kelly?",
+      "answer_text": "Because (bp − q) ≤ 0 → optimal bet is not to bet."
+    }
+  ]
+}
