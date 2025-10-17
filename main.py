@@ -1,5 +1,5 @@
 import streamlit as st
-import json, os, random, time, io, csv
+import json, os, random, time, io, csv, re
 from pathlib import Path
 from datetime import datetime, date
 
@@ -10,6 +10,7 @@ DATA_DIR = Path("data")
 PROGRESS_DIR = Path("progress")
 PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
 SCORES_FILE = PROGRESS_DIR / "scores.json"
+LEITNER_FILE = PROGRESS_DIR / "leitner.json"   # per-question proficiency
 
 # ----- 3-Phase, 21-Day plan -----
 DAYS = {
@@ -53,30 +54,88 @@ def safe_load(path: Path):
 def load_scores():
     if SCORES_FILE.exists():
         return load_json(SCORES_FILE)
-    # structure includes per-question events to compute mastery
     return {"history": [], "events": []}
 
 def save_scores(data):
     with open(SCORES_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
-# ---------- Utility ----------
-def sample_repeats(current_day: int, k: int):
+def load_leitner():
+    if LEITNER_FILE.exists():
+        return load_json(LEITNER_FILE)
+    return {"boxes": {}}  # key -> box (1..5)
+
+def save_leitner(data):
+    with open(LEITNER_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+# ---------- Helpers ----------
+def q_key(day_num: int, q_text: str):
+    """Stable key for a question, per day."""
+    return f"d{day_num}::{abs(hash(q_text)) % 10_000_000}"
+
+def box_of(leitner, key):
+    return int(leitner["boxes"].get(key, 1))
+
+def promote(leitner, key):
+    leitner["boxes"][key] = min(box_of(leitner, key) + 1, 5)
+
+def demote(leitner, key):
+    leitner["boxes"][key] = 1
+
+def simple_simplify(text: str):
+    """Very simple 'presentation mode' simplifier: shorter, plain words, one sentence."""
+    if not text:
+        return ""
+    t = text.strip()
+    t = re.sub(r"\([^)]*\)", "", t)  # drop parentheticals
+    t = re.sub(r"\bposterior probabilities\b", "model odds", t, flags=re.I)
+    t = re.sub(r"\btransition\b", "shift", t, flags=re.I)
+    t = re.sub(r"\bconfidence\b", "certainty", t, flags=re.I)
+    t = re.sub(r"\bregime\b", "market mode", t, flags=re.I)
+    t = re.sub(r"\bKelly\b", "sizing rule", t, flags=re.I)
+    # keep only first sentence if too long
+    parts = re.split(r"(?<=[.!?])\s+", t)
+    return parts[0][:240]
+
+def default_hint(q):
+    """Generate a hint if JSON lacks 'hint'."""
+    if q["type"] == "numeric":
+        return "Hint: write the formula first; keep units consistent; consider rounding."
+    if q["type"] == "mcq":
+        return "Hint: eliminate clearly wrong choices; focus on what the model actually estimates."
+    return "Think of how you’d explain this to a client in one sentence."
+
+def sample_repeats(current_day: int, k: int, leitner):
+    """Pick repeats across earlier days, weighted by Leitner box (harder items more likely)."""
     if current_day <= 1 or k == 0:
         return []
-    candidates = []
+    pool = []
     for d in range(1, current_day):
         _, fname = DAYS[d]
         qset = safe_load(DATA_DIR / fname).get("questions", [])
-        pool = [q for q in qset if q.get("type") in ("mcq", "numeric")] or qset
-        if pool:
-            q = random.choice(pool)
-            # tag with source day for analytics
-            q = dict(q)
-            q["_source_day"] = d
-            candidates.append(q)
-    random.shuffle(candidates)
-    return candidates[:k]
+        for q in qset:
+            if q.get("type") in ("mcq", "numeric"):
+                key = q_key(d, q["question"])
+                b = box_of(leitner, key)  # 1..5
+                weight = {1: 8, 2: 5, 3: 3, 4: 2, 5: 1}[b]
+                q_copy = dict(q)
+                q_copy["_source_day"] = d
+                q_copy["_key"] = key
+                pool.extend([q_copy] * weight)
+    if not pool:
+        return []
+    random.shuffle(pool)
+    chosen = []
+    # avoid duplicates by question key
+    seen = set()
+    for q in pool:
+        if q["_key"] not in seen:
+            chosen.append(q)
+            seen.add(q["_key"])
+        if len(chosen) >= k:
+            break
+    return chosen
 
 def reset_session(questions):
     st.session_state.started = True
@@ -113,21 +172,22 @@ def export_csv(scores):
 
 # ---------- UI ----------
 st.title("Small-Cap Lab Study Coach")
-st.caption("Daily quizzes with spaced repetition, mastery tracking, and exportable results.")
+st.caption("Presentation Mode, Hints, and Adaptive Repeats now live.")
 
 scores = load_scores()
+leitner = load_leitner()
 
 # Sidebar controls
 day = st.sidebar.selectbox("Choose Day", options=list(DAYS.keys()),
                            format_func=lambda d: f"Day {d}: {DAYS[d][0]}")
-reps = st.sidebar.slider("Review questions (spaced repetition)", 0, 5, 2)
-new_q = st.sidebar.slider("New questions today", 3, 10, 6)
-daily_goal = st.sidebar.number_input("Daily goal (questions)", min_value=3, max_value=20, value=8)
+reps = st.sidebar.slider("Review questions (spaced repetition)", 0, 6, 3)
+new_q = st.sidebar.slider("New questions today", 3, 12, 6)
+daily_goal = st.sidebar.number_input("Daily goal (questions)", min_value=3, max_value=30, value=8)
+presentation_mode = st.sidebar.toggle("🎯 Presentation Mode (client-friendly)")
 start_clicked = st.sidebar.button("Start / Restart Session", use_container_width=True)
 
 # Mastery dashboard (top-right)
-with st.sidebar.expander("📊 Mastery & History", expanded=False):
-    # per-day mastery
+with st.sidebar.expander("📊 Mastery, Streak & Export", expanded=False):
     per_day = {}
     for e in scores.get("events", []):
         d = e.get("day")
@@ -143,23 +203,20 @@ with st.sidebar.expander("📊 Mastery & History", expanded=False):
     else:
         st.caption("No history yet — complete a session to see mastery.")
 
-    # session streak (by calendar date)
+    # streak
     dates = [h["ts"][:10] for h in scores.get("history", [])]
     streak = 0
     if dates:
         unique = sorted(set(dates), reverse=True)
         current = date.fromisoformat(unique[0])
         today = date.today()
-        # if you studied today, good; else streak counts until last day
         if current == today:
             streak = 1
-            # walk backwards
             dptr = today
             sset = set(date.fromisoformat(x) for x in unique)
             while (dptr := dptr.fromordinal(dptr.toordinal()-1)) in sset:
                 streak += 1
         else:
-            # streak up to last study day
             streak = 1
             dptr = current
             sset = set(date.fromisoformat(x) for x in unique)
@@ -171,26 +228,47 @@ with st.sidebar.expander("📊 Mastery & History", expanded=False):
     csv_bytes = export_csv(scores)
     st.download_button("⬇️ Export results (CSV)", data=csv_bytes, file_name="study_coach_results.csv", mime="text/csv")
 
-# load current day quiz file (for title display)
+# Load current day file (title)
 _, fname = DAYS[day]
 quiz = safe_load(DATA_DIR / fname)
 st.header(quiz.get("title", f"Day {day}"))
 
 # Start or reset session
 if start_clicked:
+    # assemble new + repeats with Leitner weighting
     q_new = quiz.get("questions", [])[:]
+    # tag source for analytics & Leitner
+    temp = []
+    for q in q_new:
+        qc = dict(q)
+        qc["_source_day"] = day
+        qc["_key"] = q_key(day, q["question"])
+        temp.append(qc)
+    q_new = temp
     random.shuffle(q_new)
     q_new = q_new[:new_q]
-    q_rep = sample_repeats(day, reps)
+    q_rep = sample_repeats(day, reps, leitner)
     Q = q_rep + q_new
-    # tag current day on new questions for analytics
-    for q in Q:
-        q.setdefault("_source_day", day)
     random.shuffle(Q)
+    st.session_state.started = True
     reset_session(Q)
 
 if "started" not in st.session_state:
     st.session_state.started = False
+
+def log_event(day_num, q_idx, qtype, correct, user, expected, title):
+    evt = {
+        "ts": datetime.utcnow().isoformat() + "Z",
+        "day": day_num,
+        "q_idx": q_idx,
+        "type": qtype,
+        "correct": bool(correct),
+        "user": user,
+        "expected": expected,
+        "title": title,
+    }
+    scores["events"].append(evt)
+    save_scores(scores)
 
 if not st.session_state.started:
     st.info("Click **Start / Restart Session** in the sidebar to begin today’s quiz.")
@@ -199,28 +277,21 @@ else:
     i = st.session_state.idx
     total = len(Q)
     st.progress(i / max(1, total))
-    st.caption(f"Question {i+1} of {total} • Score: {st.session_state.correct}/{st.session_state.answered} • Daily goal: {daily_goal}")
-
-    def log_event(day_num, q_idx, qtype, correct, user, expected, title):
-        evt = {
-            "ts": datetime.utcnow().isoformat() + "Z",
-            "day": day_num,
-            "q_idx": q_idx,
-            "type": qtype,
-            "correct": bool(correct),
-            "user": user,
-            "expected": expected,
-            "title": title,
-        }
-        scores["events"].append(evt)
-        save_scores(scores)
+    st.caption(f"Question {i+1} of {total} • Score: {st.session_state.correct}/{st.session_state.answered} • Goal: {daily_goal}")
 
     if i < total:
         q = Q[i]
-        st.subheader(q["question"])
-        fb = st.empty()
         q_day = q.get("_source_day", day)
         q_title = quiz.get("title", f"Day {q_day}")
+        key = q.get("_key", q_key(q_day, q["question"]))
+
+        st.subheader(q["question"])
+        # Hints
+        hint_text = q.get("hint") or default_hint(q)
+        with st.expander("💡 Need a hint?", expanded=False):
+            st.write(hint_text)
+
+        fb = st.empty()
 
         if q["type"] == "mcq":
             choice = st.radio("Select an answer:", q["options"], key=f"mcq_{i}")
@@ -228,11 +299,18 @@ else:
                 st.session_state.answered += 1
                 expected = q["options"][q["answer"]]
                 correct = (choice == expected)
+                # Presentation Mode: simplify explanation text
+                expl = q.get("explanation", "")
+                if presentation_mode:
+                    expl = simple_simplify(expl)
                 if correct:
                     st.session_state.correct += 1
-                    fb.success("✅ Correct! " + q.get("explanation",""))
+                    fb.success("✅ Correct! " + expl)
+                    promote(leitner, key)
                 else:
-                    fb.error("❌ Incorrect. " + q.get("explanation",""))
+                    fb.error("❌ Incorrect. " + expl)
+                    demote(leitner, key)
+                save_leitner(leitner)
                 log_event(q_day, i, "mcq", correct, choice, expected, q_title)
                 time.sleep(0.4)
                 st.session_state.idx += 1
@@ -243,11 +321,17 @@ else:
             if st.button("Check", key=f"btn_{i}"):
                 st.session_state.answered += 1
                 correct = abs(val - q["answer"]) <= tol
+                expl = q.get("explanation", "")
+                if presentation_mode:
+                    expl = simple_simplify(expl)
                 if correct:
                     st.session_state.correct += 1
-                    fb.success("✅ Correct! " + q.get("explanation",""))
+                    fb.success(f"✅ Correct! {expl}")
+                    promote(leitner, key)
                 else:
-                    fb.error(f"❌ Incorrect. Expected ≈ {q['answer']} (±{tol}). " + q.get("explanation",""))
+                    fb.error(f"❌ Incorrect. Expected ≈ {q['answer']} (±{tol}). {expl}")
+                    demote(leitner, key)
+                save_leitner(leitner)
                 log_event(q_day, i, "numeric", correct, float(val), q["answer"], q_title)
                 time.sleep(0.4)
                 st.session_state.idx += 1
@@ -255,11 +339,10 @@ else:
         elif q["type"] == "repeat":
             st.info(q.get("answer_text", "Review item"))
             if st.button("Next", key=f"btn_{i}"):
-                # log as neutral event (no score)
+                # repeats don't affect Leitner boxes
                 log_event(q_day, i, "repeat", True, "", "", q_title)
                 st.session_state.idx += 1
     else:
-        # end of session
         st.session_state.started = False
         pct = (st.session_state.correct / max(1, st.session_state.answered))
         scores["history"].append({
