@@ -1,0 +1,10 @@
+{
+  "title": "Volatility Clustering & Short Bull Runs",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Why can bull regimes appear shorter yet more volatile than bears in HMM output?",
+      "answer_text": "Because large, bursty upside moves create variance that the model segments into shorter states."
+    }
+  ]
+}
