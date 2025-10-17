@@ -1,0 +1,10 @@
+{
+  "title": "Backtest Discipline & Overfitting",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Name one habit that reduces overfitting risk in your workflow.",
+      "answer_text": "Keep an untouched out-of-sample set and limit hyper-tuning cycles."
+    }
+  ]
+}
