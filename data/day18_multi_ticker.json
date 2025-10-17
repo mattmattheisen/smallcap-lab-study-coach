@@ -2,9 +2,28 @@
   "title": "Multi-Ticker Sizing & Portfolio Context",
   "questions": [
     {
+      "type": "mcq",
+      "question": "If two positions are highly correlated, the combined risk should be treated as:",
+      "options": [
+        "Two independent bets",
+        "Roughly one larger bet; reduce total size",
+        "Risk-free",
+        "A short position"
+      ],
+      "answer": 1,
+      "explanation": "Correlation concentrates risk; diversify or lower aggregate exposure."
+    },
+    {
+      "type": "numeric",
+      "question": "Two positions each sized at 5% of capital; correlation 0.8. Approximate combined variance weight using Var ≈ w1^2 + w2^2 + 2ρw1w2 (ignore asset vol differences).",
+      "answer": 0.09,
+      "tolerance": 0.005,
+      "explanation": "w1=w2=0.05 ⇒ 0.05^2+0.05^2+2*0.8*0.05*0.05 = 0.0025+0.0025+0.004 = 0.009 (i.e., 0.9% variance weight)."
+    },
+    {
       "type": "repeat",
-      "question": "How does correlation between tickers affect aggregate risk?",
-      "answer_text": "Highly correlated positions act like one larger bet; total size should be reduced."
+      "question": "State your rule of thumb for total size across correlated names.",
+      "answer_text": "Cap combined size or downweight positions when cross-correlation is high."
     }
   ]
 }
