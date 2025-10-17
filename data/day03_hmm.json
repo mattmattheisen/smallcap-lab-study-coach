@@ -1,0 +1,29 @@
+{
+  "title": "Hidden Markov Models (HMM): Regimes & Transitions",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "What does an HMM fundamentally do in this app?",
+      "options": [
+        "Directly observes true market states",
+        "Infers hidden regimes from noisy returns using transition probabilities",
+        "Eliminates all volatility",
+        "Uses only volume, not price"
+      ],
+      "answer": 1,
+      "explanation": "HMMs model unobserved states and estimate them from observed data."
+    },
+    {
+      "type": "numeric",
+      "question": "If P(Bull→Bull)=0.79, what is the expected persistence of Bull next step?",
+      "answer": 0.79,
+      "tolerance": 0.01,
+      "explanation": "Persistence = probability of remaining in the same state."
+    },
+    {
+      "type": "repeat",
+      "question": "What does 'Regime Status = TRANSITION' indicate?",
+      "answer_text": "Posterior probabilities are split; state is uncertain/turning."
+    }
+  ]
+}
