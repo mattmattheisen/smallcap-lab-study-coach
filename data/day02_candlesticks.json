@@ -1,0 +1,29 @@
+{
+  "title": "Candlestick Pattern Recognition",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "Why can a '3 bullish : 1 bearish' pattern count still fail to produce a buy signal?",
+      "options": [
+        "Because the HMM regime and confidence can overrule raw pattern counts",
+        "Because bullish patterns never work",
+        "Because counts must be exactly 4:0",
+        "Because pattern names are arbitrary"
+      ],
+      "answer": 0,
+      "explanation": "Pattern counts are context; the probabilistic regime and confidence determine edge."
+    },
+    {
+      "type": "numeric",
+      "question": "If 25% of bullish engulfings historically succeed and you saw 3 of them in 30 days, what is the naive probability of at least one success (independent events)?",
+      "answer": 0.578,
+      "tolerance": 0.02,
+      "explanation": "1 - (1-0.25)^3 = 1 - 0.75^3 ≈ 0.578. (Independence is an approximation.)"
+    },
+    {
+      "type": "repeat",
+      "question": "Explain how clustering similar patterns can cause false positives.",
+      "answer_text": "Highly correlated signals double-count the same information, inflating perceived edge."
+    }
+  ]
+}
