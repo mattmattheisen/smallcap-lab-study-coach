@@ -2,9 +2,28 @@
   "title": "Client-Friendly Explanations",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Best rewrite of 'posterior probabilities favor sideways with a bear transition risk':",
+      "options": [
+        "Math says sideways is supreme",
+        "Signals say the market is mostly flat but could break lower; we’re keeping positions light",
+        "We have no idea",
+        "Buy the dip aggressively"
+      ],
+      "answer": 1,
+      "explanation": "Plain, truthful, risk-aware language helps clients understand decisions."
+    },
+    {
+      "type": "numeric",
+      "question": "If confidence falls from 72% to 58%, and your policy scales size linearly with confidence above 60% only, what is the new size as % of full if previously at 40% of full? (Assume now below 60% threshold.)",
+      "answer": 0.0,
+      "tolerance": 0.001,
+      "explanation": "Below the 60% floor, size reduces to zero per the stated policy."
+    },
+    {
       "type": "repeat",
-      "question": "Rewrite 'HMM posterior probabilities indicate a transition' in plain language.",
-      "answer_text": "The market looks like it may be shifting from one mode to another, so we’re cautious on size."
+      "question": "Write one sentence you’d say when trimming a position for risk control.",
+      "answer_text": "Our model’s confidence decreased, so we trimmed to protect capital while awaiting clearer signals."
     }
   ]
 }
