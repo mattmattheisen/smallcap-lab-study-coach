@@ -1,5 +1,5 @@
 import streamlit as st
-import json, os, random, time, io, csv, re
+import json, os, random, time, io, csv, re, textwrap
 from pathlib import Path
 from datetime import datetime, date
 
@@ -71,7 +71,6 @@ def save_leitner(data):
 
 # ---------- Helpers ----------
 def q_key(day_num: int, q_text: str):
-    """Stable key for a question, per day."""
     return f"d{day_num}::{abs(hash(q_text)) % 10_000_000}"
 
 def box_of(leitner, key):
@@ -84,22 +83,18 @@ def demote(leitner, key):
     leitner["boxes"][key] = 1
 
 def simple_simplify(text: str):
-    """Very simple 'presentation mode' simplifier: shorter, plain words, one sentence."""
-    if not text:
-        return ""
+    if not text: return ""
     t = text.strip()
-    t = re.sub(r"\([^)]*\)", "", t)  # drop parentheticals
+    t = re.sub(r"\([^)]*\)", "", t)
     t = re.sub(r"\bposterior probabilities\b", "model odds", t, flags=re.I)
     t = re.sub(r"\btransition\b", "shift", t, flags=re.I)
     t = re.sub(r"\bconfidence\b", "certainty", t, flags=re.I)
     t = re.sub(r"\bregime\b", "market mode", t, flags=re.I)
     t = re.sub(r"\bKelly\b", "sizing rule", t, flags=re.I)
-    # keep only first sentence if too long
     parts = re.split(r"(?<=[.!?])\s+", t)
     return parts[0][:240]
 
 def default_hint(q):
-    """Generate a hint if JSON lacks 'hint'."""
     if q["type"] == "numeric":
         return "Hint: write the formula first; keep units consistent; consider rounding."
     if q["type"] == "mcq":
@@ -107,9 +102,7 @@ def default_hint(q):
     return "Think of how you’d explain this to a client in one sentence."
 
 def sample_repeats(current_day: int, k: int, leitner):
-    """Pick repeats across earlier days, weighted by Leitner box (harder items more likely)."""
-    if current_day <= 1 or k == 0:
-        return []
+    if current_day <= 1 or k == 0: return []
     pool = []
     for d in range(1, current_day):
         _, fname = DAYS[d]
@@ -117,24 +110,19 @@ def sample_repeats(current_day: int, k: int, leitner):
         for q in qset:
             if q.get("type") in ("mcq", "numeric"):
                 key = q_key(d, q["question"])
-                b = box_of(leitner, key)  # 1..5
+                b = box_of(leitner, key)
                 weight = {1: 8, 2: 5, 3: 3, 4: 2, 5: 1}[b]
                 q_copy = dict(q)
                 q_copy["_source_day"] = d
                 q_copy["_key"] = key
                 pool.extend([q_copy] * weight)
-    if not pool:
-        return []
+    if not pool: return []
     random.shuffle(pool)
-    chosen = []
-    # avoid duplicates by question key
-    seen = set()
+    chosen, seen = [], set()
     for q in pool:
         if q["_key"] not in seen:
-            chosen.append(q)
-            seen.add(q["_key"])
-        if len(chosen) >= k:
-            break
+            chosen.append(q); seen.add(q["_key"])
+        if len(chosen) >= k: break
     return chosen
 
 def reset_session(questions):
@@ -145,12 +133,9 @@ def reset_session(questions):
     st.session_state.answered = 0
 
 def badge_from_pct(p):
-    if p >= 0.85:
-        return "🏅 Gold"
-    if p >= 0.70:
-        return "🥈 Silver"
-    if p >= 0.50:
-        return "🥉 Bronze"
+    if p >= 0.85: return "🏅 Gold"
+    if p >= 0.70: return "🥈 Silver"
+    if p >= 0.50: return "🥉 Bronze"
     return "📚 Keep going"
 
 def export_csv(scores):
@@ -170,195 +155,257 @@ def export_csv(scores):
         ])
     return buf.getvalue().encode("utf-8")
 
-# ---------- UI ----------
+# ---------- UI SHELL ----------
 st.title("Small-Cap Lab Study Coach")
-st.caption("Presentation Mode, Hints, and Adaptive Repeats now live.")
 
 scores = load_scores()
 leitner = load_leitner()
 
-# Sidebar controls
-day = st.sidebar.selectbox("Choose Day", options=list(DAYS.keys()),
-                           format_func=lambda d: f"Day {d}: {DAYS[d][0]}")
-reps = st.sidebar.slider("Review questions (spaced repetition)", 0, 6, 3)
-new_q = st.sidebar.slider("New questions today", 3, 12, 6)
-daily_goal = st.sidebar.number_input("Daily goal (questions)", min_value=3, max_value=30, value=8)
-presentation_mode = st.sidebar.toggle("🎯 Presentation Mode (client-friendly)")
-start_clicked = st.sidebar.button("Start / Restart Session", use_container_width=True)
+mode = st.sidebar.radio("Mode", ["Study", "Teach-Back Cards", "Client Demo Script"])
+presentation_mode = st.sidebar.toggle("🎯 Presentation Mode (client-friendly)", value=False)
 
-# Mastery dashboard (top-right)
-with st.sidebar.expander("📊 Mastery, Streak & Export", expanded=False):
+# Mastery & utilities
+with st.sidebar.expander("📊 Mastery / Streak / Export", expanded=False):
     per_day = {}
     for e in scores.get("events", []):
         d = e.get("day")
         per_day.setdefault(d, {"c":0,"t":0})
         per_day[d]["t"] += 1
-        if e.get("correct"):
-            per_day[d]["c"] += 1
+        if e.get("correct"): per_day[d]["c"] += 1
     if per_day:
         for d in sorted(per_day):
             c,t = per_day[d]["c"], per_day[d]["t"]
-            pct = c / t if t>0 else 0
+            pct = c/t if t>0 else 0
             st.write(f"Day {d:02d}: {c}/{t}  →  {pct*100:0.0f}%  {badge_from_pct(pct)}")
     else:
         st.caption("No history yet — complete a session to see mastery.")
 
-    # streak
     dates = [h["ts"][:10] for h in scores.get("history", [])]
     streak = 0
     if dates:
         unique = sorted(set(dates), reverse=True)
-        current = date.fromisoformat(unique[0])
-        today = date.today()
+        current = date.fromisoformat(unique[0]); today = date.today()
         if current == today:
-            streak = 1
-            dptr = today
-            sset = set(date.fromisoformat(x) for x in unique)
-            while (dptr := dptr.fromordinal(dptr.toordinal()-1)) in sset:
-                streak += 1
+            streak = 1; dptr = today; sset = set(date.fromisoformat(x) for x in unique)
+            while (dptr := dptr.fromordinal(dptr.toordinal()-1)) in sset: streak += 1
         else:
-            streak = 1
-            dptr = current
-            sset = set(date.fromisoformat(x) for x in unique)
-            while (dptr := dptr.fromordinal(dptr.toordinal()-1)) in sset:
-                streak += 1
+            streak = 1; dptr = current; sset = set(date.fromisoformat(x) for x in unique)
+            while (dptr := dptr.fromordinal(dptr.toordinal()-1)) in sset: streak += 1
     st.write(f"🔥 Streak: {streak} day(s)")
 
-    # export
     csv_bytes = export_csv(scores)
     st.download_button("⬇️ Export results (CSV)", data=csv_bytes, file_name="study_coach_results.csv", mime="text/csv")
 
-# Load current day file (title)
-_, fname = DAYS[day]
-quiz = safe_load(DATA_DIR / fname)
-st.header(quiz.get("title", f"Day {day}"))
+# ----------------- STUDY MODE -----------------
+if mode == "Study":
+    st.caption("Daily quizzes with hints, adaptive repeats, and mastery tracking.")
 
-# Start or reset session
-if start_clicked:
-    # assemble new + repeats with Leitner weighting
-    q_new = quiz.get("questions", [])[:]
-    # tag source for analytics & Leitner
-    temp = []
-    for q in q_new:
-        qc = dict(q)
-        qc["_source_day"] = day
-        qc["_key"] = q_key(day, q["question"])
-        temp.append(qc)
-    q_new = temp
-    random.shuffle(q_new)
-    q_new = q_new[:new_q]
-    q_rep = sample_repeats(day, reps, leitner)
-    Q = q_rep + q_new
-    random.shuffle(Q)
-    st.session_state.started = True
-    reset_session(Q)
+    day = st.sidebar.selectbox("Choose Day", options=list(DAYS.keys()),
+                               format_func=lambda d: f"Day {d}: {DAYS[d][0]}")
+    reps = st.sidebar.slider("Review questions (spaced repetition)", 0, 6, 3)
+    new_q = st.sidebar.slider("New questions today", 3, 12, 6)
+    daily_goal = st.sidebar.number_input("Daily goal (questions)", min_value=3, max_value=30, value=8)
+    start_clicked = st.sidebar.button("Start / Restart Session", use_container_width=True)
 
-if "started" not in st.session_state:
-    st.session_state.started = False
+    _, fname = DAYS[day]
+    quiz = safe_load(DATA_DIR / fname)
+    st.header(quiz.get("title", f"Day {day}"))
 
-def log_event(day_num, q_idx, qtype, correct, user, expected, title):
-    evt = {
-        "ts": datetime.utcnow().isoformat() + "Z",
-        "day": day_num,
-        "q_idx": q_idx,
-        "type": qtype,
-        "correct": bool(correct),
-        "user": user,
-        "expected": expected,
-        "title": title,
-    }
-    scores["events"].append(evt)
-    save_scores(scores)
+    if start_clicked:
+        q_new = quiz.get("questions", [])[:]
+        enriched = []
+        for q in q_new:
+            qc = dict(q); qc["_source_day"] = day; qc["_key"] = q_key(day, q["question"])
+            enriched.append(qc)
+        random.shuffle(enriched)
+        enriched = enriched[:new_q]
+        q_rep = sample_repeats(day, reps, leitner)
+        Q = q_rep + enriched
+        random.shuffle(Q)
+        reset_session(Q)
 
-if not st.session_state.started:
-    st.info("Click **Start / Restart Session** in the sidebar to begin today’s quiz.")
-else:
-    Q = st.session_state.questions
-    i = st.session_state.idx
-    total = len(Q)
-    st.progress(i / max(1, total))
-    st.caption(f"Question {i+1} of {total} • Score: {st.session_state.correct}/{st.session_state.answered} • Goal: {daily_goal}")
+    if "started" not in st.session_state: st.session_state.started = False
 
-    if i < total:
-        q = Q[i]
-        q_day = q.get("_source_day", day)
-        q_title = quiz.get("title", f"Day {q_day}")
-        key = q.get("_key", q_key(q_day, q["question"]))
+    def log_event(day_num, q_idx, qtype, correct, user, expected, title):
+        evt = {"ts": datetime.utcnow().isoformat()+"Z","day":day_num,"q_idx":q_idx,"type":qtype,
+               "correct":bool(correct),"user":user,"expected":expected,"title":title}
+        scores["events"].append(evt); save_scores(scores)
 
-        st.subheader(q["question"])
-        # Hints
-        hint_text = q.get("hint") or default_hint(q)
-        with st.expander("💡 Need a hint?", expanded=False):
-            st.write(hint_text)
-
-        fb = st.empty()
-
-        if q["type"] == "mcq":
-            choice = st.radio("Select an answer:", q["options"], key=f"mcq_{i}")
-            if st.button("Check", key=f"btn_{i}"):
-                st.session_state.answered += 1
-                expected = q["options"][q["answer"]]
-                correct = (choice == expected)
-                # Presentation Mode: simplify explanation text
-                expl = q.get("explanation", "")
-                if presentation_mode:
-                    expl = simple_simplify(expl)
-                if correct:
-                    st.session_state.correct += 1
-                    fb.success("✅ Correct! " + expl)
-                    promote(leitner, key)
-                else:
-                    fb.error("❌ Incorrect. " + expl)
-                    demote(leitner, key)
-                save_leitner(leitner)
-                log_event(q_day, i, "mcq", correct, choice, expected, q_title)
-                time.sleep(0.4)
-                st.session_state.idx += 1
-
-        elif q["type"] == "numeric":
-            val = st.number_input("Enter your answer (decimals ok):", key=f"num_{i}")
-            tol = q.get("tolerance", 0.01)
-            if st.button("Check", key=f"btn_{i}"):
-                st.session_state.answered += 1
-                correct = abs(val - q["answer"]) <= tol
-                expl = q.get("explanation", "")
-                if presentation_mode:
-                    expl = simple_simplify(expl)
-                if correct:
-                    st.session_state.correct += 1
-                    fb.success(f"✅ Correct! {expl}")
-                    promote(leitner, key)
-                else:
-                    fb.error(f"❌ Incorrect. Expected ≈ {q['answer']} (±{tol}). {expl}")
-                    demote(leitner, key)
-                save_leitner(leitner)
-                log_event(q_day, i, "numeric", correct, float(val), q["answer"], q_title)
-                time.sleep(0.4)
-                st.session_state.idx += 1
-
-        elif q["type"] == "repeat":
-            st.info(q.get("answer_text", "Review item"))
-            if st.button("Next", key=f"btn_{i}"):
-                # repeats don't affect Leitner boxes
-                log_event(q_day, i, "repeat", True, "", "", q_title)
-                st.session_state.idx += 1
+    if not st.session_state.started:
+        st.info("Click **Start / Restart Session** in the sidebar to begin today’s quiz.")
     else:
-        st.session_state.started = False
-        pct = (st.session_state.correct / max(1, st.session_state.answered))
-        scores["history"].append({
-            "ts": datetime.utcnow().isoformat() + "Z",
-            "day": day,
-            "correct": st.session_state.correct,
-            "total": st.session_state.answered,
-            "pct": pct
-        })
-        save_scores(scores)
-        st.balloons()
-        st.success(f"Session complete — Score: {st.session_state.correct}/{st.session_state.answered} "
-                   f"({pct*100:.0f}%)  •  {badge_from_pct(pct)}")
-        # Daily goal nudge
-        if st.session_state.answered < daily_goal:
-            remaining = daily_goal - st.session_state.answered
-            st.warning(f"Daily goal not met: answer {remaining} more question(s) to hit your target today.")
+        Q = st.session_state.questions; i = st.session_state.idx; total = len(Q)
+        st.progress(i / max(1,total))
+        st.caption(f"Question {i+1} of {total} • Score: {st.session_state.correct}/{st.session_state.answered} • Goal: {daily_goal}")
+
+        if i < total:
+            q = Q[i]; q_day = q.get("_source_day", day)
+            q_title = quiz.get("title", f"Day {q_day}")
+            key = q.get("_key", q_key(q_day, q["question"]))
+
+            st.subheader(q["question"])
+            hint_text = q.get("hint") or default_hint(q)
+            with st.expander("💡 Need a hint?"): st.write(hint_text)
+            fb = st.empty()
+
+            if q["type"] == "mcq":
+                choice = st.radio("Select an answer:", q["options"], key=f"mcq_{i}")
+                if st.button("Check", key=f"btn_{i}"):
+                    st.session_state.answered += 1
+                    expected = q["options"][q["answer"]]
+                    correct = (choice == expected)
+                    expl = q.get("explanation",""); 
+                    if presentation_mode: expl = simple_simplify(expl)
+                    if correct:
+                        st.session_state.correct += 1; fb.success("✅ Correct! " + expl); promote(leitner, key)
+                    else:
+                        fb.error("❌ Incorrect. " + expl); demote(leitner, key)
+                    save_leitner(leitner)
+                    log_event(q_day, i, "mcq", correct, choice, expected, q_title)
+                    time.sleep(0.4); st.session_state.idx += 1
+
+            elif q["type"] == "numeric":
+                val = st.number_input("Enter your answer (decimals ok):", key=f"num_{i}")
+                tol = q.get("tolerance", 0.01)
+                if st.button("Check", key=f"btn_{i}"):
+                    st.session_state.answered += 1
+                    correct = abs(val - q["answer"]) <= tol
+                    expl = q.get("explanation",""); 
+                    if presentation_mode: expl = simple_simplify(expl)
+                    if correct:
+                        st.session_state.correct += 1; fb.success(f"✅ Correct! {expl}"); promote(leitner, key)
+                    else:
+                        fb.error(f"❌ Incorrect. Expected ≈ {q['answer']} (±{tol}). {expl}"); demote(leitner, key)
+                    save_leitner(leitner)
+                    log_event(q_day, i, "numeric", correct, float(val), q["answer"], q_title)
+                    time.sleep(0.4); st.session_state.idx += 1
+
+            elif q["type"] == "repeat":
+                st.info(q.get("answer_text","Review item"))
+                if st.button("Next", key=f"btn_{i}"):
+                    log_event(q_day, i, "repeat", True, "", "", q_title)
+                    st.session_state.idx += 1
         else:
-            st.info("🎯 Daily goal achieved — nice work!")
+            st.session_state.started = False
+            pct = (st.session_state.correct / max(1, st.session_state.answered))
+            scores["history"].append({"ts":datetime.utcnow().isoformat()+"Z","day":day,
+                                      "correct":st.session_state.correct,"total":st.session_state.answered,"pct":pct})
+            save_scores(scores)
+            st.balloons()
+            st.success(f"Session complete — Score: {st.session_state.correct}/{st.session_state.answered} "
+                       f"({pct*100:.0f}%)  •  {badge_from_pct(pct)}")
+            if st.session_state.answered < st.sidebar.number_input.__defaults__:
+                st.info("Keep at it!")
+
+# -------------- TEACH-BACK CARDS MODE --------------
+elif mode == "Teach-Back Cards":
+    st.caption("Auto-flashcards from questions you missed. Teach it back to lock it in.")
+    # Gather missed questions from history (most recent first)
+    missed = []
+    seen_keys = set()
+    for e in reversed(scores.get("events", [])):
+        if not e.get("correct"):
+            d = e["day"]; _, fname = DAYS.get(d, (None, None))
+            if not fname: continue
+            quiz = safe_load(DATA_DIR / fname)
+            q_idx = e["q_idx"]
+            # We need to find the question text; fall back by matching expected text substring
+            # Simple approach: search by expected in MCQs/numerics
+            qt = None; expl = ""; opt = []; ans_text = None
+            for q in quiz.get("questions", []):
+                if q.get("type") == "mcq" and isinstance(q.get("options"), list):
+                    # assume match on explanation or question text
+                    if q.get("question") and (q["question"] not in seen_keys):
+                        qt = q["question"]; expl = q.get("explanation",""); opt = q.get("options", [])
+                        ans_text = opt[q.get("answer",0)] if opt and isinstance(q.get("answer"), int) else ""
+                        break
+                elif q.get("type") == "numeric":
+                    if q.get("question") and (q["question"] not in seen_keys):
+                        qt = q["question"]; expl = q.get("explanation",""); ans_text = q.get("answer")
+                        break
+            if qt and qt not in seen_keys:
+                seen_keys.add(qt)
+                missed.append({"day": d, "title": quiz.get("title", f"Day {d}"),
+                               "question": qt, "answer": ans_text, "explanation": expl})
+
+    if not missed:
+        st.success("No missed questions on record — great job! Do a Study session and come back.")
+    else:
+        for i, card in enumerate(missed, 1):
+            with st.container(border=True):
+                st.markdown(f"**Day {card['day']}: {card['title']}**")
+                st.write(f"**Q{i}. {card['question']}**")
+                show = st.button("Show answer", key=f"show_{i}")
+                if show:
+                    expl = card["explanation"] or ""
+                    if presentation_mode: expl = simple_simplify(expl)
+                    st.info(f"**Answer:** {card['answer']}")
+                    st.write(expl)
+                cols = st.columns(2)
+                with cols[0]:
+                    if st.button("✅ Mark learned", key=f"learn_{i}"):
+                        # promote its Leitner key (use question text + day)
+                        key = q_key(card["day"], card["question"])
+                        promote(leitner, key); save_leitner(leitner)
+                        st.toast("Promoted in practice schedule.")
+                with cols[1]:
+                    if st.button("🔁 Practice more", key=f"more_{i}"):
+                        key = q_key(card["day"], card["question"])
+                        demote(leitner, key); save_leitner(leitner)
+                        st.toast("Will resurface more often.")
+
+        # Download deck as CSV
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["day","title","question","answer","explanation"])
+        for c in missed:
+            w.writerow([c["day"], c["title"], c["question"], c["answer"], c["explanation"]])
+        st.download_button("⬇️ Download cards (CSV)", data=buf.getvalue().encode("utf-8"),
+                           file_name="teach_back_cards.csv", mime="text/csv")
+
+# -------------- CLIENT DEMO SCRIPT MODE --------------
+elif mode == "Client Demo Script":
+    st.caption("Generate a 2–3 minute client-friendly script from your best explanations.")
+    # Pick days to include
+    days_sel = st.multiselect("Select days/topics", options=list(DAYS.keys()),
+                              default=[1,3,6,7,15,21],
+                              format_func=lambda d: f"Day {d}: {DAYS[d][0]}")
+    max_points = st.slider("Max bullets per day", 1, 5, 3)
+    include_math = st.toggle("Include light math", value=True)
+
+    # Build script
+    sections = []
+    for d in days_sel:
+        title, fname = DAYS[d]
+        quiz = safe_load(DATA_DIR / fname)
+        bullets = []
+        # Collect from repeat 'answer_text' and explanations (MCQ/Numeric)
+        for q in quiz.get("questions", []):
+            line = ""
+            if q.get("type") == "repeat" and q.get("answer_text"):
+                line = q["answer_text"]
+            elif q.get("explanation"):
+                line = q["explanation"]
+            if line:
+                if not include_math:
+                    line = simple_simplify(line)
+                bullets.append(line.strip())
+            if len(bullets) >= max_points: break
+        if bullets:
+            sections.append((f"**{title}**", bullets))
+
+    # Render + download
+    if sections:
+        script_lines = []
+        script_lines.append("## Small-Cap Lab — Client Walkthrough (2–3 minutes)\n")
+        for hdr, blts in sections:
+            script_lines.append(hdr)
+            for b in blts:
+                script_lines.append(f"- {b}")
+            script_lines.append("")  # spacer
+        script_md = "\n".join(script_lines)
+        st.markdown(script_md)
+        st.download_button("⬇️ Download script (Markdown)", data=script_md.encode("utf-8"),
+                           file_name="client_demo_script.md", mime="text/markdown")
+    else:
+        st.info("Select at least one day to generate a script.")
