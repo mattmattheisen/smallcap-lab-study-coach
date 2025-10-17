@@ -1,0 +1,10 @@
+{
+  "title": "Failure Modes: Noise, Fat Tails, Outliers",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "List one model failure mode you watch for and how you mitigate it.",
+      "answer_text": "Example: regime whipsaw → mitigate with confidence thresholds and fractional Kelly."
+    }
+  ]
+}
