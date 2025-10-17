@@ -1,0 +1,29 @@
+{
+  "title": "Confidence & Combined Strength",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "If confidence=56% but your threshold=70%, what happens?",
+      "options": [
+        "Signal is valid",
+        "Signal is ignored or sized down",
+        "Kelly increases automatically",
+        "Pattern counts are reset"
+      ],
+      "answer": 1,
+      "explanation": "Below-threshold confidence reduces or nullifies trade size."
+    },
+    {
+      "type": "numeric",
+      "question": "Combine sub-scores: HMM=3/10, Patterns=4/10, Volume=3/10. What is Combined Strength (0–10)?",
+      "answer": 3.33,
+      "tolerance": 0.05,
+      "explanation": "Average = (3+4+3)/3 = 3.33."
+    },
+    {
+      "type": "repeat",
+      "question": "Why can multiple weak signals still be useful?",
+      "answer_text": "When independent, small edges can aggregate into a tradable advantage."
+    }
+  ]
+}
