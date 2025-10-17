@@ -1,0 +1,29 @@
+{
+  "title": "Regime Analysis Table",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "Sideways shows the highest percentage of days. Why might that be?",
+      "options": [
+        "Markets trend strongly most of the time",
+        "Short-term mean reversion and noise dominate many periods",
+        "Bear markets last 90% of the time",
+        "HMM forces Sideways by design"
+      ],
+      "answer": 1,
+      "explanation": "Most days are choppy/noisy; persistence in middling state is common."
+    },
+    {
+      "type": "numeric",
+      "question": "If Bull avg return=2.04% and volatility=3.58%, what is a simple Sharpe proxy (return/vol)?",
+      "answer": 0.57,
+      "tolerance": 0.03,
+      "explanation": "2.04 / 3.58 ≈ 0.57 (units per period)."
+    },
+    {
+      "type": "repeat",
+      "question": "What does high persistence but negative average return imply for Bear?",
+      "answer_text": "Losses can compound if you fight a stable down regime."
+    }
+  ]
+}
