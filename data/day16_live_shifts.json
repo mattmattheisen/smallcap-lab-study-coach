@@ -2,9 +2,28 @@
   "title": "Interpreting Live Regime Shifts",
   "questions": [
     {
+      "type": "mcq",
+      "question": "A sudden move pushes the posterior from Bull(65%) to Sideways(55%). Most appropriate action:",
+      "options": [
+        "Increase size immediately",
+        "Hold or reduce size until the new regime stabilizes",
+        "Close all positions permanently",
+        "Ignore the model"
+      ],
+      "answer": 1,
+      "explanation": "Shifts call for caution and confirmation, not aggressive adds."
+    },
+    {
+      "type": "numeric",
+      "question": "If your confidence threshold is 0.70 and current confidence is 0.62, how much must confidence increase (in percentage points) to trigger your entry rule?",
+      "answer": 0.08,
+      "tolerance": 0.001,
+      "explanation": "Need 0.70 − 0.62 = 0.08 (8 percentage points)."
+    },
+    {
       "type": "repeat",
-      "question": "How should sizing respond when the model flags a transition state?",
-      "answer_text": "Reduce or pause sizing until confidence clears the threshold or regime stabilizes."
+      "question": "Name one indicator you’d monitor to validate a regime shift besides price.",
+      "answer_text": "Volume/volatility change, breadth, or macro risk proxy depending on your stack."
     }
   ]
 }
