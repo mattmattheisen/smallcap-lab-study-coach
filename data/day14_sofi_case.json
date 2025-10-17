@@ -1,0 +1,10 @@
+{
+  "title": "SOFI Deep Walkthrough",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "State the pipeline you would use to explain a SOFI signal to a client.",
+      "answer_text": "Filters → regime probabilities & confidence → combined strength → fractional Kelly sizing."
+    }
+  ]
+}
