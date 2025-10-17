@@ -1,0 +1,10 @@
+{
+  "title": "Storytelling with Data",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Write one sentence you’d say to a client when a position size drops due to confidence falling.",
+      "answer_text": "Our model’s confidence pulled back, so we trimmed size to control risk while we wait for clarity."
+    }
+  ]
+}
