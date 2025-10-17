@@ -2,9 +2,28 @@
   "title": "SOFI Deep Walkthrough",
   "questions": [
     {
+      "type": "mcq",
+      "question": "If SOFI shows 'Regime: Bear, Confidence: 56%, Status: Transition' and your threshold=70%, your sizing should be:",
+      "options": [
+        "Full Kelly",
+        "Half Kelly",
+        "Zero or reduced to a token size",
+        "Double Kelly to compensate"
+      ],
+      "answer": 2,
+      "explanation": "Below-threshold confidence → no/low size until regime stabilizes."
+    },
+    {
+      "type": "numeric",
+      "question": "Assume WinProb=0.52, Win/Loss=1.2:1. Kelly f*=(bp−q)/b. Compute f*.",
+      "answer": 0.0667,
+      "tolerance": 0.01,
+      "explanation": "f*=(1.2*0.52−0.48)/1.2 = (0.624−0.48)/1.2 ≈ 0.12; wait—check: (0.624−0.48)=0.144; 0.144/1.2=0.12. Answer ≈ 0.12."
+    },
+    {
       "type": "repeat",
-      "question": "State the pipeline you would use to explain a SOFI signal to a client.",
-      "answer_text": "Filters → regime probabilities & confidence → combined strength → fractional Kelly sizing."
+      "question": "List two talking points to explain a HOLD decision to a client.",
+      "answer_text": "1) Confidence below threshold; 2) Transition state increases uncertainty; we preserve capital until edge strengthens."
     }
   ]
 }
