@@ -1,0 +1,10 @@
+{
+  "title": "Client-Friendly Explanations",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Rewrite 'HMM posterior probabilities indicate a transition' in plain language.",
+      "answer_text": "The market looks like it may be shifting from one mode to another, so we’re cautious on size."
+    }
+  ]
+}
