@@ -2,9 +2,28 @@
   "title": "Storytelling with Data",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Best structure for a client-facing chart deck slide:",
+      "options": [
+        "Lots of equations first",
+        "Insight title → visual → one-sentence takeaway → action",
+        "Dense table of raw numbers",
+        "No labels"
+      ],
+      "answer": 1,
+      "explanation": "Lead with the 'so what' and keep the visual clean."
+    },
+    {
+      "type": "numeric",
+      "question": "If Combined Strength rises from 3.3/10 to 5.0/10 and your policy scales linearly to a max of 8/10, what fraction of max size is now indicated?",
+      "answer": 0.625,
+      "tolerance": 0.02,
+      "explanation": "(5.0 / 8.0) = 0.625 of max."
+    },
+    {
       "type": "repeat",
-      "question": "Write one sentence you’d say to a client when a position size drops due to confidence falling.",
-      "answer_text": "Our model’s confidence pulled back, so we trimmed size to control risk while we wait for clarity."
+      "question": "Write a one-line takeaway for a regime flip from Bear→Sideways.",
+      "answer_text": "Downtrend pressure eased; we moved from defense to neutral positioning pending confidence."
     }
   ]
 }
