@@ -1,0 +1,10 @@
+{
+  "title": "Expected Value & Compounding Efficiency",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Explain EV in one sentence as it relates to trade sizing.",
+      "answer_text": "EV is the probability-weighted average outcome; position size should grow when EV is positive and robust."
+    }
+  ]
+}
