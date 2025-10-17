@@ -1,0 +1,29 @@
+{
+  "title": "Screening & Filtering Logic",
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "Why do we set a minimum market cap for small-cap screening?",
+      "options": [
+        "To avoid micro-caps with extreme volatility and illiquidity",
+        "To maximize dividends",
+        "To focus only on large blue-chip stocks",
+        "To include penny stocks"
+      ],
+      "answer": 0,
+      "explanation": "A floor improves liquidity and statistical reliability."
+    },
+    {
+      "type": "numeric",
+      "question": "If EPS growth = 15% and P/E = 20, what is the PEG ratio?",
+      "answer": 1.33,
+      "tolerance": 0.05,
+      "explanation": "PEG = P/E ÷ growth = 20 ÷ 15 = 1.33."
+    },
+    {
+      "type": "repeat",
+      "question": "Explain why tightening growth filters too much can reduce opportunities.",
+      "answer_text": "You may exclude stocks in early recovery or regime transition phases."
+    }
+  ]
+}
