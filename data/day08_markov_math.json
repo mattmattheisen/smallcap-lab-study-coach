@@ -1,0 +1,10 @@
+{
+  "title": "Transition Matrices & Stationary Probabilities",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "In your own words, explain what a transition matrix represents in regime modeling.",
+      "answer_text": "It lists probabilities of moving from one regime to another (or staying) in the next step."
+    }
+  ]
+}
