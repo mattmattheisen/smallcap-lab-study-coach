@@ -2,9 +2,28 @@
   "title": "Distributions & Kurtosis by Regime",
   "questions": [
     {
+      "type": "mcq",
+      "question": "High kurtosis in a regime implies:",
+      "options": [
+        "More probability mass in the center and tails (more extreme moves)",
+        "Lower variance than a normal distribution",
+        "Errors in the data feed",
+        "Stationarity is guaranteed"
+      ],
+      "answer": 0,
+      "explanation": "Leptokurtic distributions have fatter tails and a sharper peak than Gaussian."
+    },
+    {
+      "type": "numeric",
+      "question": "If a regime has daily mean 0.1% and standard deviation 1.2%, what is the z-score of a +3% day? (Use sd=0.012)",
+      "answer": 2.4167,
+      "tolerance": 0.05,
+      "explanation": "z = (0.03 − 0.001)/0.012 ≈ 2.4167; fat tails mean such events are more common than Gaussian predicts."
+    },
+    {
       "type": "repeat",
-      "question": "Describe how fat tails (high kurtosis) can affect backtests and signal confidence.",
-      "answer_text": "Fat tails mean more extreme moves than a normal model predicts, which can break naive assumptions."
+      "question": "Why can fat tails make naive stop-loss distances unreliable?",
+      "answer_text": "Because extreme moves occur more often than Gaussian assumptions imply, stops can be hit unexpectedly."
     }
   ]
 }
