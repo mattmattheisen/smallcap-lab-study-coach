@@ -2,9 +2,28 @@
   "title": "Fractional Kelly & Risk Constraints",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Main reason to use fractional Kelly (e.g., 0.5x):",
+      "options": [
+        "To reduce sensitivity to estimation error and drawdown volatility",
+        "To maximize CAGR at all costs",
+        "Because Kelly doesn't work",
+        "To avoid diversification"
+      ],
+      "answer": 0,
+      "explanation": "Fractional Kelly retains much of growth with lower risk when inputs are uncertain."
+    },
+    {
+      "type": "numeric",
+      "question": "If full Kelly f*=0.20 and you impose a 40% cap of full Kelly, what is position size?",
+      "answer": 0.08,
+      "tolerance": 0.001,
+      "explanation": "0.4 × 0.20 = 0.08 (8% of capital)."
+    },
+    {
       "type": "repeat",
-      "question": "Why is half-Kelly commonly preferred in live trading?",
-      "answer_text": "It reduces drawdowns and model risk while retaining much of Kelly’s growth benefit."
+      "question": "Give one portfolio-level reason to cut position sizes below Kelly.",
+      "answer_text": "Cross-asset correlations raise aggregate risk; fractional Kelly limits portfolio volatility."
     }
   ]
 }
