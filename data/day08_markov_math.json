@@ -2,9 +2,28 @@
   "title": "Transition Matrices & Stationary Probabilities",
   "questions": [
     {
+      "type": "mcq",
+      "question": "What does each row of a transition matrix represent in a 3-state HMM (Bear, Sideways, Bull)?",
+      "options": [
+        "Probabilities of moving from that row's state to each column's state next step",
+        "Historical average returns of each state",
+        "Volatility of each state",
+        "Sharpe ratio of each state"
+      ],
+      "answer": 0,
+      "explanation": "Row i lists P(state_t+1 = j | state_t = i) over all j; row sums to 1."
+    },
+    {
+      "type": "numeric",
+      "question": "Given a simplified 2-state chain with P(S→S)=0.8, P(S→B)=0.2, P(B→S)=0.4, P(B→B)=0.6, what is the stationary probability of state S? (Solve π = πP, π_S + π_B = 1)",
+      "answer": 0.6667,
+      "tolerance": 0.02,
+      "explanation": "Solve: π_S = 0.8π_S + 0.4π_B ⇒ 0.2π_S = 0.4(1−π_S) ⇒ 0.2π_S = 0.4 − 0.4π_S ⇒ 0.6π_S = 0.4 ⇒ π_S ≈ 0.6667."
+    },
+    {
       "type": "repeat",
-      "question": "In your own words, explain what a transition matrix represents in regime modeling.",
-      "answer_text": "It lists probabilities of moving from one regime to another (or staying) in the next step."
+      "question": "Explain why high persistence (diagonal values near 1) affects average holding periods.",
+      "answer_text": "Higher self-transition probabilities lengthen expected time spent in a regime before switching."
     }
   ]
 }
