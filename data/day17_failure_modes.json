@@ -2,9 +2,28 @@
   "title": "Failure Modes: Noise, Fat Tails, Outliers",
   "questions": [
     {
+      "type": "mcq",
+      "question": "Which practice most reduces model fragility to outliers?",
+      "options": [
+        "Use fractional Kelly and confidence thresholds",
+        "Always full Kelly",
+        "Ignore volatility",
+        "Remove stop-losses"
+      ],
+      "answer": 0,
+      "explanation": "Sizing controls + thresholds buffer tail events and misclassification."
+    },
+    {
+      "type": "numeric",
+      "question": "A 5-sigma event under normal assumptions has probability ~2.87e-7 per draw. In 252 trading days, expected occurrences ≈ ?",
+      "answer": 0.000072,
+      "tolerance": 0.00005,
+      "explanation": "252 * 2.87e-7 ≈ 7.2e-5 (but reality shows more tail events than Gaussian)."
+    },
+    {
       "type": "repeat",
-      "question": "List one model failure mode you watch for and how you mitigate it.",
-      "answer_text": "Example: regime whipsaw → mitigate with confidence thresholds and fractional Kelly."
+      "question": "What policy helps during whipsaw?",
+      "answer_text": "Wait for confidence to re-cross the threshold; avoid chasing flips with large size."
     }
   ]
 }
