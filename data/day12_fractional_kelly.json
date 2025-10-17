@@ -1,0 +1,10 @@
+{
+  "title": "Fractional Kelly & Risk Constraints",
+  "questions": [
+    {
+      "type": "repeat",
+      "question": "Why is half-Kelly commonly preferred in live trading?",
+      "answer_text": "It reduces drawdowns and model risk while retaining much of Kelly’s growth benefit."
+    }
+  ]
+}
